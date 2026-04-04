@@ -5,6 +5,14 @@ import re
 import httpx
 
 from app.services.prompt_templates import SYSTEM_PROMPT
+from app.config import get_gemini_api_key
+
+try:
+    from google import genai
+    from google.genai import types
+except Exception:  # pragma: no cover - optional dependency usage at runtime
+    genai = None
+    types = None
 
 
 def _extract_file_name(prompt: str) -> str:
@@ -31,6 +39,29 @@ def _fallback_command(prompt: str) -> dict:
 
 
 async def call_llm(user_prompt: str) -> str:
+    gemini_key = get_gemini_api_key().strip()
+    if gemini_key and genai is not None and types is not None:
+        try:
+            client = genai.Client(
+                api_key=gemini_key,
+                http_options=types.HttpOptions(
+                    timeout=120000,
+                    retryOptions=types.HttpRetryOptions(attempts=3),
+                ),
+            )
+            full_prompt = f"{SYSTEM_PROMPT}\n\nInput: {user_prompt}"
+            response = await __import__("asyncio").to_thread(
+                client.models.generate_content,
+                model=os.getenv("LLM_MODEL", "gemini-2.5-flash"),
+                contents=full_prompt,
+            )
+            response_text = getattr(response, "text", None)
+            if response_text:
+                return response_text
+        except Exception:
+            # Keep demo resilient; fall back to deterministic local parser.
+            pass
+
     api_key = os.getenv("LLM_API_KEY", "").strip()
     api_url = os.getenv("LLM_API_URL", "").strip()
     model = os.getenv("LLM_MODEL", "").strip()
