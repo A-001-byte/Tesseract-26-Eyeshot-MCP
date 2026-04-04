@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from app.config import ROOT_ENV_FILE
+from app.config import ROOT_ENV_FILE, get_allowed_origins
 from app.services.llm_client import generate_response
 from app.services.parser import parse_llm_output
 from app.services.prompt_templates import build_command_prompt
@@ -18,12 +18,14 @@ logger = logging.getLogger(__name__)
 
 logger.info("Loaded environment variables from %s", ROOT_ENV_FILE)
 
+ALLOWED_ORIGINS = get_allowed_origins()
+
 app = FastAPI(title="LLM Parsing Service", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=bool(ALLOWED_ORIGINS),
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -186,7 +188,7 @@ async def generate_command(request: GenerateCommandRequest):
             return _failure_response(validation_error, status_code=400)
 
         logger.info("Response sent for request_id=%s route=/generate-command", request_id)
-        return parsed_output
+        return {"status": "success", "structured_command": parsed_output}
     except RuntimeError as exc:
         logger.error(
             "LLM request failed for request_id=%s route=/generate-command: %s",
