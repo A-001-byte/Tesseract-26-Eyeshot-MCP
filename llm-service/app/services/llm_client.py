@@ -16,7 +16,7 @@ except Exception:  # pragma: no cover - optional dependency usage at runtime
 
 
 def _extract_file_name(prompt: str) -> str:
-    match = re.search(r"([\w\-]+\.(?:step|stp|iges|igs|obj))", prompt, flags=re.IGNORECASE)
+    match = re.search(r"([A-Za-z0-9_.-]+\.(?:step|stp|iges|igs|obj))", prompt, flags=re.IGNORECASE)
     if match:
         return match.group(1)
     return "gear.step"

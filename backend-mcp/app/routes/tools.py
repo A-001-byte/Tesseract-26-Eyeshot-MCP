@@ -29,6 +29,12 @@ async def tool_load_model(request: LoadModelRequest):
         return await load_model(request.filePath)
     except HTTPException:
         raise
+    except ValueError as exc:
+        logger.error("load_model validation error", exc_info=exc)
+        raise HTTPException(status_code=400, detail=str(exc))
+    except httpx.HTTPStatusError as exc:
+        logger.error("load_model upstream status error", exc_info=exc)
+        raise HTTPException(status_code=502, detail="Upstream error")
     except httpx.TimeoutException as exc:
         logger.error("load_model timeout", exc_info=exc)
         raise HTTPException(status_code=504, detail="Upstream timeout")
@@ -46,6 +52,12 @@ async def tool_get_entity_count():
         return await get_entity_count()
     except HTTPException:
         raise
+    except ValueError as exc:
+        logger.error("get_entity_count validation error", exc_info=exc)
+        raise HTTPException(status_code=400, detail=str(exc))
+    except httpx.HTTPStatusError as exc:
+        logger.error("get_entity_count upstream status error", exc_info=exc)
+        raise HTTPException(status_code=502, detail="Upstream error")
     except httpx.TimeoutException as exc:
         logger.error("get_entity_count timeout", exc_info=exc)
         raise HTTPException(status_code=504, detail="Upstream timeout")
@@ -63,6 +75,12 @@ async def tool_list_entities():
         return await list_entities()
     except HTTPException:
         raise
+    except ValueError as exc:
+        logger.error("list_entities validation error", exc_info=exc)
+        raise HTTPException(status_code=400, detail=str(exc))
+    except httpx.HTTPStatusError as exc:
+        logger.error("list_entities upstream status error", exc_info=exc)
+        raise HTTPException(status_code=502, detail="Upstream error")
     except httpx.TimeoutException as exc:
         logger.error("list_entities timeout", exc_info=exc)
         raise HTTPException(status_code=504, detail="Upstream timeout")
@@ -85,6 +103,12 @@ async def chat(request: ChatRequest):
         return await route_prompt(request.prompt)
     except HTTPException:
         raise
+    except ValueError as exc:
+        logger.error("chat validation error", exc_info=exc)
+        raise HTTPException(status_code=400, detail=str(exc))
+    except httpx.HTTPStatusError as exc:
+        logger.error("chat upstream status error", exc_info=exc)
+        raise HTTPException(status_code=502, detail="Upstream error")
     except httpx.TimeoutException as exc:
         logger.error("chat timeout", exc_info=exc)
         raise HTTPException(status_code=504, detail="Upstream timeout")
