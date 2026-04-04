@@ -9,4 +9,4 @@ load_dotenv(ROOT_ENV_FILE)
 
 
 def get_gemini_api_key() -> str:
-    return os.getenv("GEMINI_API_KEY", "")
+    return os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY") or ""

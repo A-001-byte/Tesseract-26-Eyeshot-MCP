@@ -3,25 +3,25 @@ import json
 
 def parse_llm_output(response: str) -> dict:
     """
-    Extract the first JSON object from an LLM response and parse it.
+    Decode the first JSON object found in an LLM response.
     """
+    decoder = json.JSONDecoder()
+
     try:
-        # Pull out the outermost JSON object by slicing from the first
-        # opening brace to the last closing brace in the response text.
-        start_index = response.find("{")
-        end_index = response.rfind("}")
+        # Scan forward until we find a position where a JSON object decodes
+        # cleanly, which is more resilient than slicing between braces.
+        for start_index, char in enumerate(response):
+            if char != "{":
+                continue
 
-        if start_index == -1 or end_index == -1 or start_index > end_index:
-            raise json.JSONDecodeError("No JSON object found", response, 0)
+            parsed_response, end_index = decoder.raw_decode(response[start_index:])
+            if not isinstance(parsed_response, dict):
+                raise json.JSONDecodeError("Parsed JSON is not an object", response, start_index)
 
-        json_payload = response[start_index : end_index + 1]
+            json_payload = response[start_index : start_index + end_index]
+            return json.loads(json_payload)
 
-        # Decode the extracted JSON substring into a Python dictionary.
-        parsed_response = json.loads(json_payload)
-        if isinstance(parsed_response, dict):
-            return parsed_response
-
-        raise json.JSONDecodeError("Parsed JSON is not an object", json_payload, 0)
+        raise json.JSONDecodeError("No JSON object found", response, 0)
     except (json.JSONDecodeError, TypeError):
         return {
             "error": "Invalid LLM response",
