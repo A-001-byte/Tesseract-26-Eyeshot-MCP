@@ -103,7 +103,16 @@ async def _generate_and_parse_command(
     )
     logger.debug("Raw LLM response for request_id=%s: %s", request_id, raw_llm_response)
 
-    parsed_output = enforce_json_output(raw_llm_response)
+    try:
+        parsed_output = enforce_json_output(raw_llm_response)
+    except Exception as exc:
+        logger.error(
+            "Parse/schema validation failed for request_id=%s: %s",
+            request_id,
+            str(exc),
+        )
+        return "Invalid LLM response format", None
+
     logger.info("Parsed output ready for request_id=%s", request_id)
     logger.debug("Parsed output for request_id=%s: %s", request_id, parsed_output)
 

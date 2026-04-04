@@ -13,8 +13,11 @@ LLM_SERVICE_URL = os.getenv("LLM_SERVICE_URL", "http://localhost:7000")
 
 
 async def parse_prompt(prompt: str) -> Dict[str, Any]:
+    base = LLM_SERVICE_URL.rstrip("/")
+    llm_parse_url = base if base.endswith("/parse") else f"{base}/parse"
+
     async with httpx.AsyncClient(timeout=20.0) as client:
-        response = await client.post(f"{LLM_SERVICE_URL}/parse", json={"prompt": prompt})
+        response = await client.post(llm_parse_url, json={"prompt": prompt})
         response.raise_for_status()
         payload = response.json()
 

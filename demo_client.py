@@ -3,7 +3,7 @@ import sys
 import urllib.error
 import urllib.request
 
-CHAT_URL = "http://localhost:8000/chat"
+CHAT_URL = "http://localhost:8000/api/v1/tools/chat"
 
 
 class Colors:
@@ -131,7 +131,7 @@ def main() -> int:
         print(f"Detail: {json.dumps(detail, indent=2)}")
         return 1
     except urllib.error.URLError as e:
-        print(color("\nCould not reach MCP server at http://localhost:8000/chat", Colors.RED))
+        print(color("\nCould not reach MCP server at http://localhost:8000/api/v1/tools/chat", Colors.RED))
         print(f"Reason: {e.reason}")
         return 1
     except json.JSONDecodeError:
