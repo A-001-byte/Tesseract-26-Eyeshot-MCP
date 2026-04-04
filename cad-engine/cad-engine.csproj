@@ -5,11 +5,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>CadEngine</RootNamespace>
+    <AssemblyName>cad-engine</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Placeholder for Eyeshot NuGet constraints if needed -->
-    <!-- <PackageReference Include="devDept.Eyeshot" Version="2023.2.*" /> -->
+    <!-- Swagger / OpenAPI -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+
+    <!-- Placeholder: uncomment when Eyeshot NuGet feed is configured -->
+    <!-- <PackageReference Include="devDept.Eyeshot" Version="2024.1.*" /> -->
   </ItemGroup>
 
 </Project>
