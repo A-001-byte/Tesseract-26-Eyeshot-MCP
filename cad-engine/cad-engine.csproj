@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CadEngine</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Placeholder for Eyeshot NuGet constraints if needed -->
+    <!-- <PackageReference Include="devDept.Eyeshot" Version="2023.2.*" /> -->
+  </ItemGroup>
+
+</Project>
