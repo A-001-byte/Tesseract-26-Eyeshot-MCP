@@ -47,9 +47,19 @@ namespace cad_engine.Services
             _logger.LogDebug("Unlocking Eyeshot license...");
             Console.WriteLine("[EyeshotService] Initialising — unlocking license...");
 
+            // Fetch the Eyeshot license key from the EYESHOT_LICENSE_KEY environment variable.
+            string? licenseKey = Environment.GetEnvironmentVariable("EYESHOT_LICENSE_KEY");
+
+            if (string.IsNullOrWhiteSpace(licenseKey))
+            {
+                string errorMsg = "CRITICAL: EYESHOT_LICENSE_KEY environment variable is missing or empty. Eyeshot cannot be unlocked.";
+                _logger.LogCritical(errorMsg);
+                Console.WriteLine($"[EyeshotService] {errorMsg}");
+                throw new InvalidOperationException(errorMsg);
+            }
+
             // Unlock the Eyeshot license (required before any SDK call)
-            // Replace with your actual key or pull from IConfiguration / env var
-            devDept.LicenseManager.Unlock(typeof(Model), "YOUR-EYESHOT-LICENSE-KEY");
+            devDept.LicenseManager.Unlock(typeof(Model), licenseKey);
 
             // Create a blank headless model
             _model = new Model();
