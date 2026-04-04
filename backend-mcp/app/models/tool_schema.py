@@ -1,5 +1,6 @@
+from typing import List
 from pydantic import BaseModel
-from typing import List, Optional
+
 
 class ToolParameter(BaseModel):
     name: str
@@ -7,25 +8,34 @@ class ToolParameter(BaseModel):
     description: str
     required: bool = True
 
+
 class ToolSchema(BaseModel):
     name: str
     description: str
     parameters: List[ToolParameter]
 
-# Example MCP Tool Schema representation
-STUB_TOOL_SCHEMA = {
-    "tools": [
-        {
-            "name": "load_model",
-            "description": "Loads a 3D model file into the CAD workspace",
-            "parameters": [
-                {
-                    "name": "file_path",
-                    "type": "string",
-                    "description": "Absolute or relative path to the STEP/IGES file",
-                    "required": True
-                }
-            ]
-        }
-    ]
-}
+
+TOOLS = [
+    ToolSchema(
+        name="load_model",
+        description="Load a CAD file into the current workspace.",
+        parameters=[
+            ToolParameter(
+                name="filePath",
+                type="string",
+                description="Absolute or relative model path, for example gear.step",
+                required=True,
+            )
+        ],
+    ),
+    ToolSchema(
+        name="get_entity_count",
+        description="Return number of entities in the current CAD workspace.",
+        parameters=[],
+    ),
+    ToolSchema(
+        name="list_entities",
+        description="Return entity IDs in the current CAD workspace.",
+        parameters=[],
+    ),
+]
