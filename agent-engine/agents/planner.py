@@ -6,7 +6,7 @@ SYSTEM_PROMPT = """
 You are a CAD operation planner. Convert user instructions into a structured JSON plan.
 
 Available tools:
-- load_model(file: str)
+- load_model(file_path: str)
 - list_entities()
 - get_properties(entity_id: str)
 - move_object(entity_id: str, translation: [x, y, z])
@@ -18,7 +18,7 @@ Rules:
 
 Example output:
 [
-  {"tool": "load_model", "args": {"file": "assembly.stp"}},
+  {"tool": "load_model", "args": {"file_path": "assembly.stp"}},
   {"tool": "list_entities", "args": {}}
 ]
 """

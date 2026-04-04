@@ -12,7 +12,7 @@ logging.getLogger("uvicorn").setLevel(logging.WARNING)
 
 # Basic MCP server skeleton
 mcp = FastMCP("CAD-Engine-MCP")
-CAD_API_BASE_URL = "http://172.168.0.6:5005"
+CAD_API_BASE_URL = "http://localhost:5005"
 
 def log(message: str):
     """
@@ -24,7 +24,8 @@ def log(message: str):
 async def check_backend_health():
     try:
         async with httpx.AsyncClient() as client:
-            res = await client.get(f"{CAD_API_BASE_URL}/api/cad/list_entities", timeout=3)
+            # P2 added a lightweight endpoint /api/cad/entities/count which is perfect for a ping test!
+            res = await client.get(f"{CAD_API_BASE_URL}/api/cad/entities/count", timeout=3)
             return res.status_code == 200
     except:
         return False
@@ -36,18 +37,19 @@ async def load_model(file_path: str) -> dict:
     """
     log("[MCP] Tool: load_model")
     log(f"[MCP] Input: {file_path}")
-    log("[MCP] Calling API: POST /api/cad/load_model")
+    log("[MCP] Calling API: POST /api/cad/load")
     
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                f"{CAD_API_BASE_URL}/api/cad/load_model",
-                json={"filePath": file_path}  # EXACT MATCH: API expects "filePath"
+                f"{CAD_API_BASE_URL}/api/cad/load",
+                json={"filePath": file_path}
             )
             response.raise_for_status()
             
-            # The backend API returns { "message": "Model loaded successfully." }
             payload = response.json()
+            # P2 backend now returns its own { status, message, data } structure
+            # We enforce standard mapping to ensure the LLM gets consistent types
             api_message = payload.get("message", f"Successfully loaded model from {file_path}")
             
             log("[MCP] Success: Model loaded successfully")
@@ -82,22 +84,23 @@ async def list_entities() -> dict:
     """
     log("[MCP] Tool: list_entities")
     log("[MCP] Input: None")
-    log("[MCP] Calling API: GET /api/cad/list_entities")
+    log("[MCP] Calling API: GET /api/cad/entities/list")
     
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(f"{CAD_API_BASE_URL}/api/cad/list_entities")
+            response = await client.get(f"{CAD_API_BASE_URL}/api/cad/entities/list")
             response.raise_for_status()
             
-            # The backend returns a raw array: [{ "id": "...", "type": "Line" }]
+            # P2 now returns nested data: { "status": "Success", "data": [ { "id": "...", "type": "..." } ] }
             payload = response.json()
+            raw_entities = payload.get("data", [])
             
             log("[MCP] Success: Entities retrieved successfully")
             return {
                 "status": "success",
-                "message": f"Successfully retrieved {len(payload)} entities",
+                "message": f"Successfully retrieved {len(raw_entities)} entities",
                 "data": {
-                    "entities": payload
+                    "entities": raw_entities
                 }
             }
             
@@ -117,6 +120,68 @@ async def list_entities() -> dict:
             msg = f"Unexpected error: {str(e)}"
             log(f"[MCP] Error: {msg}")
             return {"status": "error", "message": msg, "data": {}}
+
+
+@mcp.tool()
+async def get_properties(entity_id: str) -> dict:
+    """
+    Get detailed properties for a specific CAD entity by its ID (e.g. type, layer, visibility, colour).
+    """
+    log("[MCP] Tool: get_properties")
+    log(f"[MCP] Input: {entity_id}")
+    log(f"[MCP] Calling API: GET /api/cad/entities/{entity_id}")
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"{CAD_API_BASE_URL}/api/cad/entities/{entity_id}")
+            response.raise_for_status()
+            
+            # P2 backend maps properties under "data"
+            payload = response.json()
+            properties = payload.get("data", {})
+            
+            log(f"[MCP] Success: Retrieved properties for entity {entity_id}")
+            return {
+                "status": "success",
+                "message": f"Properties retrieved for {entity_id}",
+                "data": {
+                    "properties": properties
+                }
+            }
+            
+        except httpx.HTTPStatusError as e:
+            msg = f"API returned non-200 status code: {e.response.status_code}"
+            log(f"[MCP] Error: {msg}")
+            return {"status": "error", "message": msg, "data": {}}
+        except httpx.RequestError as e:
+            msg = f"Network failure calling API (Connection Refused/Timeout)"
+            log(f"[MCP] Error: {msg}")
+            return {"status": "error", "message": msg, "data": {}}
+        except ValueError:
+            msg = "Invalid JSON response from API"
+            log(f"[MCP] Error: {msg}")
+            return {"status": "error", "message": msg, "data": {}}
+        except Exception as e:
+            msg = f"Unexpected error: {str(e)}"
+            log(f"[MCP] Error: {msg}")
+            return {"status": "error", "message": msg, "data": {}}
+
+@mcp.tool()
+async def move_object(entity_id: str, translation: list) -> dict:
+    """
+    Move a CAD entity by a 3D translation vector [x, y, z].
+    """
+    log("[MCP] Tool: move_object")
+    log(f"[MCP] Input: {entity_id}, {translation}")
+    
+    msg = "Feature 'move_object' is not yet implemented by the .NET CAD engine backend. Please inform the user."
+    log(f"[MCP] Error/Stub: {msg}")
+    
+    return {
+         "status": "error",
+         "message": msg,
+         "data": {}
+    }
 
 
 if __name__ == "__main__":

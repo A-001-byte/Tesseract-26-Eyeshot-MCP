@@ -4,9 +4,12 @@ from mcp.client.stdio import stdio_client
 
 import sys
 
+import os
+
+SERVER_SCRIPT = os.path.join(os.path.dirname(__file__), "..", "backend-mcp", "server.py")
 SERVER_PARAMS = StdioServerParameters(
     command=sys.executable,
-    args=["../backend-mcp/server.py"],  # adjust path to P2's server.py
+    args=[SERVER_SCRIPT],  # robustly resolves to backend-mcp/server.py
 )
 
 def call_tool(tool_name: str, args: dict) -> dict:
