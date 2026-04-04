@@ -1,4 +1,7 @@
 import json
+import re
+
+from app.models.command_schema import StructuredCommand
 
 
 def parse_llm_output(response: str) -> dict:
@@ -28,6 +31,31 @@ def parse_llm_output(response: str) -> dict:
             "raw": response,
         }
 
-
 def enforce_json_output(llm_response: str) -> dict:
-    return parse_llm_output(llm_response)
+    parsed = None
+
+    try:
+        parsed = json.loads(llm_response)
+    except json.JSONDecodeError:
+        parsed = None
+
+    if parsed is None:
+        match = re.search(r"```(?:json)?(.*?)```", llm_response, re.DOTALL)
+        if match:
+            try:
+                parsed = json.loads(match.group(1).strip())
+            except json.JSONDecodeError:
+                parsed = None
+
+    if parsed is None:
+        parsed = parse_llm_output(llm_response)
+
+    if not isinstance(parsed, dict) or parsed.get("error"):
+        raise ValueError(f"Could not extract valid JSON from LLM output: {llm_response}")
+
+    # Accept legacy snake_case from some prompts and normalize to camelCase.
+    if "file_path" in parsed and "filePath" not in parsed:
+        parsed["filePath"] = parsed.pop("file_path")
+
+    validated = StructuredCommand.model_validate(parsed)
+    return validated.model_dump(exclude_none=True)

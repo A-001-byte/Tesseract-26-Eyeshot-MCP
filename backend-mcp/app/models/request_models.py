@@ -1,6 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-class CommandRequest(BaseModel):
-    instruction: str
-    # Possible session_id or user contexts
-    # session_id: Optional[str] = None
+
+class LoadModelRequest(BaseModel):
+    filePath: str = Field(..., min_length=1)
+
+
+class ChatRequest(BaseModel):
+    prompt: str = Field(..., min_length=1)

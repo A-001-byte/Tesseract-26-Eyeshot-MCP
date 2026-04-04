@@ -1,51 +1,96 @@
-import logging
+import json
+import os
+import re
 
-from google import genai
-from google.genai import types
+import httpx
 
+from app.services.prompt_templates import SYSTEM_PROMPT
 from app.config import get_gemini_api_key
 
-logger = logging.getLogger(__name__)
-MODEL_NAME = "gemini-2.5-flash"
+try:
+    from google import genai
+    from google.genai import types
+except Exception:  # pragma: no cover - optional dependency usage at runtime
+    genai = None
+    types = None
 
 
-def _get_client() -> genai.Client:
-    api_key = get_gemini_api_key()
-    if not api_key:
-        raise RuntimeError("Gemini API key is not configured.")
-
-    return genai.Client(
-        api_key=api_key,
-        http_options=types.HttpOptions(
-            timeout=120000,
-            retryOptions=types.HttpRetryOptions(attempts=5),
-        ),
-    )
+def _extract_file_name(prompt: str) -> str:
+    match = re.search(r"([A-Za-z0-9_.-]+\.(?:step|stp|iges|igs|obj))", prompt, flags=re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return "gear.step"
 
 
-def generate_response(prompt: str) -> str:
-    """
-    Send a prompt to Gemini and return the raw text response.
-    """
-    logger.info("Sending request to Gemini")
-    logger.debug("Using Gemini model: %s", MODEL_NAME)
+def _fallback_command(prompt: str) -> dict:
+    text = prompt.lower()
+    file_name = _extract_file_name(prompt)
+
+    if "load" in text and ("count" in text or "how many" in text):
+        return {"action": "load_and_count", "filePath": file_name}
+    if "load" in text:
+        return {"action": "load_model", "filePath": file_name}
+    if "count" in text or "how many" in text:
+        return {"action": "get_entity_count"}
+    if "list" in text or "entities" in text:
+        return {"action": "list_entities"}
+
+    return {"action": "get_entity_count"}
+
+
+async def call_llm(user_prompt: str) -> str:
+    gemini_key = get_gemini_api_key().strip()
+    if gemini_key and genai is not None and types is not None:
+        try:
+            client = genai.Client(
+                api_key=gemini_key,
+                http_options=types.HttpOptions(
+                    timeout=120000,
+                    retryOptions=types.HttpRetryOptions(attempts=3),
+                ),
+            )
+            full_prompt = f"{SYSTEM_PROMPT}\n\nInput: {user_prompt}"
+            response = await __import__("asyncio").to_thread(
+                client.models.generate_content,
+                model=os.getenv("LLM_MODEL", "gemini-2.5-flash"),
+                contents=full_prompt,
+            )
+            response_text = getattr(response, "text", None)
+            if response_text:
+                return response_text
+        except Exception:
+            return json.dumps(_fallback_command(user_prompt))
+
+    api_key = os.getenv("LLM_API_KEY", "").strip()
+    api_url = os.getenv("LLM_API_URL", "").strip()
+    model = os.getenv("LLM_MODEL", "").strip()
+
+    if not api_key or not api_url or not model:
+        return json.dumps(_fallback_command(user_prompt))
+
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": 0,
+    }
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
 
     try:
-        client = _get_client()
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=prompt,
-        )
-        response_text = getattr(response, "text", None)
-        if not response_text:
-            logger.error("Received empty response text from Gemini model %s", MODEL_NAME)
-            raise RuntimeError(f"Empty response from Gemini model {MODEL_NAME}.")
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(api_url, headers=headers, json=payload)
+            response.raise_for_status()
+            body = response.json()
 
-        logger.info("Received response from Gemini")
-        logger.debug("Gemini response length=%s", len(response_text))
-        return response_text
-    except RuntimeError:
-        raise
-    except Exception as exc:
-        logger.exception("Gemini API request failed")
-        raise RuntimeError("Gemini API request failed.") from exc
+        content = body.get("choices", [{}])[0].get("message", {}).get("content", "")
+        if not content:
+            return json.dumps(_fallback_command(user_prompt))
+        return content
+    except Exception:
+        return json.dumps(_fallback_command(user_prompt))

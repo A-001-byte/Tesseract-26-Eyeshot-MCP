@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from app.routes import tools
 from app.utils.logger import get_logger
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -17,12 +20,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include the endpoints that serve as our MCP entry points/tools
-app.include_router(tools.router, prefix="/api/v1/tools", tags=["MCP Tools"])
+# Include endpoints for MCP tools and the chat orchestration flow
+app.include_router(tools.router, prefix="/api/v1/tools", tags=["MCP"])
 
 @app.get("/")
 async def root():
-    return {"message": "MCP Server is running. Integrate with CAD Engine and LLM Service."}
+    return {"message": "MCP server running", "chat": "/chat", "tools": "/tools"}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 if __name__ == "__main__":
     logger.info("Starting up MCP Server on port 8000")
