@@ -1,84 +1,36 @@
-// =============================================================================
-// EyeshotService.cs — Eyeshot SDK wrapper
-// =============================================================================
-// Encapsulates all interactions with the devDept Eyeshot CAD engine.
-// Currently uses placeholder/simulated logic so the API can be tested
-// end-to-end without an Eyeshot license.
-//
-// Replace the stub implementations with real Eyeshot calls when the
-// NuGet package is installed and a valid license key is available.
-// =============================================================================
+using cad_engine.Models;
 
-namespace CadEngine.Services
+namespace cad_engine.Services;
+
+/// <summary>
+/// Service acting as an abstraction layer for the CAD engine.
+/// Placeholder logic for future Eyeshot integration.
+/// </summary>
+public class EyeshotService
 {
     /// <summary>
-    /// Singleton service that manages the Eyeshot CAD workspace.
+    /// Simulates loading a CAD model from a file path.
     /// </summary>
-    public class EyeshotService
+    /// <param name="filePath">Path to the CAD file.</param>
+    /// <returns>True if the model loaded successfully, false otherwise.</returns>
+    public bool LoadModel(string filePath)
     {
-        private readonly ILogger<EyeshotService> _logger;
+        // Placeholder return until actual Eyeshot logic is integrated
+        return !string.IsNullOrWhiteSpace(filePath);
+    }
 
-        // Placeholder for the actual Eyeshot Design / Workspace object
-        // private Design _workspace;
-
-        public EyeshotService(ILogger<EyeshotService> logger)
+    /// <summary>
+    /// Retrieves a list of dummy entities from the loaded CAD model.
+    /// </summary>
+    /// <returns>A list of CAD entities.</returns>
+    public IEnumerable<EntityResponse> ListEntities()
+    {
+        // Returning dummy values as a placeholder
+        return new List<EntityResponse>
         {
-            _logger = logger;
-
-            // TODO: Unlock Eyeshot license on startup
-            // devDept.LicenseManager.Unlock("YOUR-EYESHOT-LICENSE-KEY");
-
-            _logger.LogInformation("EyeshotService initialised (stub mode)");
-        }
-
-        /// <summary>
-        /// Loads a STEP or IGES file into the CAD workspace.
-        /// </summary>
-        /// <param name="filePath">Absolute or relative path to the model file.</param>
-        /// <returns>True if the model was loaded successfully.</returns>
-        public bool LoadModel(string filePath)
-        {
-            _logger.LogInformation("[EyeshotService] Loading model from {FilePath}", filePath);
-
-            // Real implementation:
-            // var reader = new ReadSTEP(filePath);
-            // reader.DoWork();
-            // _workspace.Entities.AddRange(reader.Entities);
-
-            return true; // Stub: always succeeds
-        }
-
-        /// <summary>
-        /// Lists high-level information about every entity in the workspace.
-        /// </summary>
-        public object ListEntities()
-        {
-            _logger.LogInformation("[EyeshotService] Listing workspace entities");
-
-            // Stub data — replace with _workspace.Entities enumeration
-            return new
-            {
-                TotalEntities = 12,
-                Layers = new[] { "Default", "Construction" }
-            };
-        }
-
-        /// <summary>
-        /// Returns geometric and material properties for a given entity.
-        /// </summary>
-        /// <param name="id">The entity identifier.</param>
-        public object GetEntityProperties(string id)
-        {
-            _logger.LogInformation("[EyeshotService] Properties requested for entity {Id}", id);
-
-            // Stub data — replace with real bounding-box / mass-property queries
-            return new
-            {
-                Id = id,
-                Volume = 1250.45,
-                SurfaceArea = 600.22,
-                Material = "Steel"
-            };
-        }
+            new EntityResponse { Id = Guid.NewGuid().ToString(), Type = "Line" },
+            new EntityResponse { Id = Guid.NewGuid().ToString(), Type = "Circle" },
+            new EntityResponse { Id = Guid.NewGuid().ToString(), Type = "Mesh" }
+        };
     }
 }
