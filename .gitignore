@@ -14,3 +14,10 @@
 *.csproj.nuget.g.props
 *.csproj.nuget.g.targets
 *.nuget.cache
+
+# Environment and Secrets
+.env
+.env.local
+
+# Runtime logs and audit trails
+audit_trail.json

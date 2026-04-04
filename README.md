@@ -12,9 +12,17 @@ This repository contains the hackathon prototype for an AI-driven CAD applicatio
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and assign your API keys.
-2. Ensure you have Node.js, Python, and .NET installed locally or run via the (forthcoming) Docker definitions.
-3. Start the services as per the instructions in their respective folders.
+1. Copy `.env.example` to `.env`.
+2. Assign your secret keys:
+   - `GEMINI_API_KEY`: Your Gemini API key from Google AI Studio.
+   - `EYESHOT_LICENSE_KEY`: Your Eyeshot production license key.
+3. **IMPORTANT**: NEVER commit your `.env` file to the repository. It is already included in `.gitignore` to prevent accidental credential leaks.
+
+## Requirements
+
+- Node.js (for the frontend)
+- Python 3.10+ (for MCP and LLM services)
+- .NET 8 SDK (for the CAD engine)
 
 ## Command Flow example
 - Prompt: "Load the sample.step model"
