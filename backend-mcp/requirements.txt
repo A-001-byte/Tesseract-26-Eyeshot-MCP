@@ -1,6 +1,7 @@
-fastapi==0.109.2
+fastapi==0.112.2
+starlette>=0.39.2
 uvicorn==0.27.1
 httpx==0.26.0
 pydantic==2.6.1
 python-dotenv==1.0.1
-mcp
+mcp==1.27.0

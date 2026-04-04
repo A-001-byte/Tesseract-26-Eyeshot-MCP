@@ -1,0 +1,16 @@
+# .NET build outputs
+[Bb]in/
+[Oo]bj/
+
+# Build artifacts
+*.dll
+*.pdb
+*.cache
+*.sourcelink.json
+*.deps.json
+
+# NuGet generated files
+*.csproj.nuget.dgspec.json
+*.csproj.nuget.g.props
+*.csproj.nuget.g.targets
+*.nuget.cache

@@ -1,6 +1,8 @@
 import json
 import re
 
+from app.models.command_schema import StructuredCommand
+
 
 def parse_llm_output(response: str) -> dict:
     """
@@ -28,9 +30,6 @@ def parse_llm_output(response: str) -> dict:
             "error": "Invalid LLM response",
             "raw": response,
         }
-
-
-from app.models.command_schema import StructuredCommand
 
 def enforce_json_output(llm_response: str) -> dict:
     parsed = None

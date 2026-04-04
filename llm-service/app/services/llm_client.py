@@ -59,8 +59,7 @@ async def call_llm(user_prompt: str) -> str:
             if response_text:
                 return response_text
         except Exception:
-            # Keep demo resilient; fall back to deterministic local parser.
-            pass
+            return json.dumps(_fallback_command(user_prompt))
 
     api_key = os.getenv("LLM_API_KEY", "").strip()
     api_url = os.getenv("LLM_API_URL", "").strip()
@@ -83,12 +82,15 @@ async def call_llm(user_prompt: str) -> str:
         "Content-Type": "application/json",
     }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(api_url, headers=headers, json=payload)
-        response.raise_for_status()
-        body = response.json()
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(api_url, headers=headers, json=payload)
+            response.raise_for_status()
+            body = response.json()
 
-    content = body.get("choices", [{}])[0].get("message", {}).get("content", "")
-    if not content:
+        content = body.get("choices", [{}])[0].get("message", {}).get("content", "")
+        if not content:
+            return json.dumps(_fallback_command(user_prompt))
+        return content
+    except Exception:
         return json.dumps(_fallback_command(user_prompt))
-    return content
