@@ -1,0 +1,21 @@
+{
+  "name": "tesseract-26-eyeshot-mcp",
+  "version": "1.0.0",
+  "description": "This repository contains the hackathon prototype for an AI-driven CAD application utilizing the Model Context Protocol (MCP) and devDept Eyeshot SDK.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/A-001-byte/Tesseract-26-Eyeshot-MCP.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/A-001-byte/Tesseract-26-Eyeshot-MCP/issues"
+  },
+  "homepage": "https://github.com/A-001-byte/Tesseract-26-Eyeshot-MCP#readme"
+}

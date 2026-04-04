@@ -6,8 +6,7 @@ SYSTEM_PROMPT = """
 You are a CAD operation planner. Convert user instructions into a structured JSON plan.
 
 Available tools:
-- load_model(file_path: str)  ← must use exactly "file_path"
-
+- load_model(file_path: str)
 - list_entities()
 - get_properties(entity_id: str)
 - move_object(entity_id: str, translation: [x, y, z])
@@ -28,7 +27,7 @@ def generate_plan(user_prompt: str) -> list:
     api_key = os.getenv("GEMINI_API_KEY")  # or OPENAI_API_KEY, swap as needed
 
     response = requests.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
         headers={"Content-Type": "application/json"},
         params={"key": api_key},
 

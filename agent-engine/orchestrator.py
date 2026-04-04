@@ -1,25 +1,19 @@
-import json
+import real_mcp as mock_mcp
 import audit_trail
 from agents.validator import validate_tool_call
 
 USE_REAL_MCP = True  # ✅ Flipped to True! Our proxy server is ready!
-
 
 if USE_REAL_MCP:
     import real_mcp as mcp
 else:
     import mock_mcp as mcp
 
-import audit_trail
-from agents.validator import validate_tool_call
-from agents.executor import execute_step
-from agents.critic import review_results
-
 TOOL_MAP = {
     "load_model": mcp.load_model,
     "list_entities": mcp.list_entities,
     "get_properties": mcp.get_properties,
-    "move_object": mcp.move_object,
+    "move_object":mcp.move_object,
 }
 
 import json
@@ -36,14 +30,12 @@ def unwrap_response(output) -> dict:
         
     return output.get("data", output) if isinstance(output, dict) else output
 
-def execute_plan(plan: list, user_prompt: str = "") -> dict:
+def execute_plan(plan: list):
     results = []
-
     for step in plan:
         tool = step["tool"]
         args = step.get("args", {})
 
-        # Validator Agent
         validation = validate_tool_call(tool, args)
         if not validation["valid"]:
             audit_trail.log("Orchestrator", tool, args,
@@ -51,17 +43,14 @@ def execute_plan(plan: list, user_prompt: str = "") -> dict:
             results.append({"step": step, "skipped": True, "errors": validation["errors"]})
             continue
 
-        # Executor Agent
-        result = execute_step(tool, args, TOOL_MAP)
-        if "output" in result:
-            result["output"] = unwrap_response(result["output"])
-        results.append({"step": step, **result})
+        fn = TOOL_MAP.get(tool)
+        if not fn:
+            results.append({"step": step, "error": "Unknown tool"})
+            continue
 
-    # Critic Agent — reviews everything after execution
-    review = {}
-    if user_prompt:
-        print("\n=== CRITIC AGENT REVIEWING ===")
-        review = review_results(user_prompt, results)
-        print(json.dumps(review, indent=2))
+        output = fn(**args)
+        output = unwrap_response(output)   # ← added here, right after tool executes
+        audit_trail.log("Orchestrator", tool, args, output)
+        results.append({"step": step, "output": output})
 
-    return {"results": results, "review": review}
+    return results
