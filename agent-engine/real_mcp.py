@@ -16,11 +16,20 @@ def call_tool(tool_name: str, args: dict) -> dict:
     return asyncio.run(_call_tool_async(tool_name, args))
 
 async def _call_tool_async(tool_name: str, args: dict) -> dict:
+    import json
     async with stdio_client(SERVER_PARAMS) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
             result = await session.call_tool(tool_name, args)
-            return result
+            # CallToolResult.content is a list of TextContent/ImageContent etc.
+            # Extract the first text block and parse it as JSON
+            if result.content:
+                text = result.content[0].text
+                try:
+                    return json.loads(text)
+                except (json.JSONDecodeError, AttributeError):
+                    return {"raw": text}
+            return {}
 
 # Same interface as mock_mcp.py — orchestrator calls these
 def load_model(file_path: str) -> dict:
