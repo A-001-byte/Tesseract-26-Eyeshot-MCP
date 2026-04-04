@@ -1,77 +1,50 @@
-// =============================================================================
-// CadController.cs — Core CAD operation endpoints
-// =============================================================================
-// Exposes REST endpoints that the MCP backend calls to perform CAD operations
-// through the Eyeshot SDK wrapper (EyeshotService).
-//
-// Endpoints:
-//   POST /api/cad/load           — Load a STEP / IGES model into the workspace
-//   GET  /api/cad/entities       — List all entities currently in the workspace
-//   GET  /api/cad/entities/{id}  — Get properties of a specific entity
-// =============================================================================
-
+using cad_engine.Models;
+using cad_engine.Services;
 using Microsoft.AspNetCore.Mvc;
-using CadEngine.Models;
-using CadEngine.Services;
 
-namespace CadEngine.Controllers
+namespace cad_engine.Controllers;
+
+/// <summary>
+/// Controller exposing REST API endpoints for CAD operations.
+/// </summary>
+[ApiController]
+[Route("api/cad")]
+public class CadController : ControllerBase
 {
-    [ApiController]
-    [Route("api/cad")]
-    public class CadController : ControllerBase
+    private readonly EyeshotService _eyeshotService;
+
+    public CadController(EyeshotService eyeshotService)
     {
-        private readonly EyeshotService _eyeshotService;
-        private readonly ILogger<CadController> _logger;
+        _eyeshotService = eyeshotService;
+    }
 
-        public CadController(EyeshotService eyeshotService, ILogger<CadController> logger)
+    /// <summary>
+    /// Loads a CAD model.
+    /// </summary>
+    /// <param name="request">Request containing the file path.</param>
+    /// <returns>Success message if loaded.</returns>
+    [HttpPost("load_model")]
+    public IActionResult LoadModel([FromBody] LoadModelRequest request)
+    {
+        // Ask service to load model using provided file path
+        bool success = _eyeshotService.LoadModel(request.FilePath);
+
+        if (success)
         {
-            _eyeshotService = eyeshotService;
-            _logger = logger;
+            return Ok(new { message = "Model loaded successfully." });
         }
+        
+        return BadRequest(new { message = "Failed to load model. Invalid or missing FilePath." });
+    }
 
-        /// <summary>
-        /// Loads a 3D model file (STEP / IGES) into the CAD workspace.
-        /// </summary>
-        [HttpPost("load")]
-        [ProducesResponseType(typeof(CadResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult LoadModel([FromBody] CadRequest request)
-        {
-            _logger.LogInformation("Received request to load model: {FilePath}", request.FilePath);
-
-            if (string.IsNullOrEmpty(request.FilePath))
-                return BadRequest(new CadResponse { Status = "Error", Message = "File path cannot be empty." });
-
-            var success = _eyeshotService.LoadModel(request.FilePath);
-
-            if (success)
-                return Ok(new CadResponse { Status = "Success", Message = $"Model loaded: {request.FilePath}" });
-
-            return StatusCode(500, new CadResponse { Status = "Error", Message = "Failed to load model." });
-        }
-
-        /// <summary>
-        /// Returns all entities currently loaded in the CAD workspace.
-        /// </summary>
-        [HttpGet("entities")]
-        [ProducesResponseType(typeof(CadResponse), StatusCodes.Status200OK)]
-        public IActionResult ListEntities()
-        {
-            _logger.LogInformation("Listing entities in workspace");
-            var entities = _eyeshotService.ListEntities();
-            return Ok(new CadResponse { Status = "Success", Data = entities });
-        }
-
-        /// <summary>
-        /// Returns geometric and material properties for a specific entity.
-        /// </summary>
-        [HttpGet("entities/{id}")]
-        [ProducesResponseType(typeof(CadResponse), StatusCodes.Status200OK)]
-        public IActionResult GetEntityProperties(string id)
-        {
-            _logger.LogInformation("Fetching properties for entity {EntityId}", id);
-            var properties = _eyeshotService.GetEntityProperties(id);
-            return Ok(new CadResponse { Status = "Success", Data = properties });
-        }
+    /// <summary>
+    /// Lists entities from the (dummy) loaded model.
+    /// </summary>
+    /// <returns>A list of CAD entities.</returns>
+    [HttpGet("list_entities")]
+    public IActionResult ListEntities()
+    {
+        var entities = _eyeshotService.ListEntities();
+        return Ok(entities);
     }
 }

@@ -1,19 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>CadEngine</RootNamespace>
-    <AssemblyName>cad-engine</AssemblyName>
+    <RootNamespace>cad_engine</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
-    <!-- Swagger / OpenAPI -->
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-
-    <!-- Placeholder: uncomment when Eyeshot NuGet feed is configured -->
-    <!-- <PackageReference Include="devDept.Eyeshot" Version="2024.1.*" /> -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
+  <!-- No external dependencies added yet -->
 </Project>
