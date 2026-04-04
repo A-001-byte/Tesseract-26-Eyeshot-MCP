@@ -4,6 +4,9 @@ from typing import Any, Dict, List
 import httpx
 
 from app.services import cad_client
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 LLM_SERVICE_URL = os.getenv("LLM_SERVICE_URL", "http://localhost:7000")
@@ -84,18 +87,31 @@ async def route_prompt(prompt: str) -> Dict[str, Any]:
             raise ValueError("load_and_count requires a non-empty filePath")
         steps.append(f"Executing MCP tool: load_model({file_path})")
         load_result = await cad_client.load_model(file_path)
-        steps.append("Executing MCP tool: get_entity_count()")
-        count_result = await cad_client.get_entity_count()
-        tool_result = {
-            "tool": "load_and_count",
-            "ok": load_result.get("ok", False) and count_result.get("ok", False),
-            "data": {
-                "load": load_result,
-                "count": count_result,
-            },
-        }
+        steps.append("MCP executed load_model")
         audit.append("MCP executed load_model")
-        audit.append("MCP executed get_entity_count")
+        steps.append("Executing MCP tool: get_entity_count()")
+        try:
+            count_result = await cad_client.get_entity_count()
+            tool_result = {
+                "tool": "load_and_count",
+                "ok": load_result.get("ok", False) and count_result.get("ok", False),
+                "data": {
+                    "load": load_result,
+                    "count": count_result,
+                },
+            }
+            audit.append("MCP executed get_entity_count")
+        except Exception as exc:
+            logger.error("load_and_count failed during get_entity_count", exc_info=exc)
+            tool_result = {
+                "tool": "load_and_count",
+                "ok": False,
+                "data": {
+                    "load": load_result,
+                    "count_error": str(exc),
+                },
+            }
+            audit.append("MCP get_entity_count failed")
 
     else:
         raise ValueError(f"Unsupported action: {action}")

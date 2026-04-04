@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # Include endpoints for MCP tools and the chat orchestration flow
-app.include_router(tools.router, tags=["MCP"])
+app.include_router(tools.router, prefix="/api/v1/tools", tags=["MCP"])
 
 @app.get("/")
 async def root():

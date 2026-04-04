@@ -39,3 +39,6 @@ TOOLS = [
         parameters=[],
     ),
 ]
+
+# Backward-compatible alias for older imports.
+STUB_TOOL_SCHEMA = TOOLS

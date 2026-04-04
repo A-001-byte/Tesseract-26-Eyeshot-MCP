@@ -39,10 +39,10 @@ class GenerateCommandRequest(BaseModel):
 
 
 ALLOWED_ACTIONS = {
-    "load_model": {"file_path": str},
+    "load_model": {"filePath": str},
+    "load_and_count": {"filePath": str},
+    "get_entity_count": {},
     "list_entities": {},
-    "get_entity_properties": {"entity_id": str},
-    "measure_distance": {"entity1": str, "entity2": str},
 }
 
 
@@ -70,6 +70,9 @@ def _validate_structured_command(structured_json: dict) -> str | None:
         return "Structured command must be a JSON object"
     if "error" in structured_json:
         return structured_json.get("error", "Invalid LLM response")
+
+    if "file_path" in structured_json and "filePath" not in structured_json:
+        structured_json["filePath"] = structured_json.pop("file_path")
 
     action = structured_json.get("action")
     if not isinstance(action, str):
