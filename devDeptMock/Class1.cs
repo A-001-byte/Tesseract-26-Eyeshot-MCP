@@ -35,7 +35,11 @@ namespace devDept.Eyeshot.Translators
     public class ReadFileAsync
     {
         public devDept.Eyeshot.Entities.Entity[] Entities { get; set; } = Array.Empty<devDept.Eyeshot.Entities.Entity>();
-        public virtual void DoWork() { }
+        public virtual void DoWork()
+        {
+            // Demo-friendly mock behavior: reading any supported file returns one stub entity.
+            Entities = new[] { new devDept.Eyeshot.Entities.Entity() };
+        }
     }
 
     public class ReadSTEP : ReadFileAsync

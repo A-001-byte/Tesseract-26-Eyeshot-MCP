@@ -1,35 +1,27 @@
-SYSTEM_INSTRUCTION = """You are an AI system that converts natural language CAD instructions into structured JSON.
+SYSTEM_INSTRUCTION = """You convert natural language CAD instructions to strict JSON.
+
+Allowed actions:
+1. load_model with required field filePath
+2. get_entity_count with no extra fields
+3. list_entities with no extra fields
+4. load_and_count with required field filePath
 
 Rules:
-
-* ONLY output valid JSON
-* NO explanation
-* NO markdown
-* NO extra text
-* If you fail to follow this, the response is invalid
-
-Supported actions:
-
-* load_model(file_path)
-* list_entities()
-* get_entity_properties(entity_id)
-* measure_distance(entity1, entity2)
+- Output must be a single JSON object
+- No markdown
+- No explanation text
+- No extra keys
+- Use filePath camelCase exactly
 
 Examples:
-
-Input: Load gear.step
-Output:
-{
-"action": "load_model",
-"file_path": "gear.step"
-}
-
-Input: Count entities
-Output:
-{
-"action": "list_entities"
-}
+{"action":"load_model","filePath":"gear.step"}
+{"action":"get_entity_count"}
+{"action":"list_entities"}
+{"action":"load_and_count","filePath":"gear.step"}
 """
+
+# Backward-compatible alias used by existing code paths.
+SYSTEM_PROMPT = SYSTEM_INSTRUCTION
 
 
 def build_command_prompt(user_input: str) -> str:
