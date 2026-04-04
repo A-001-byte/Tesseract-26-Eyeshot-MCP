@@ -1,0 +1,1 @@
+# Tesseract-26-Eyeshot-MCP
