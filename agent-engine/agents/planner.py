@@ -28,7 +28,7 @@ def generate_plan(user_prompt: str) -> list:
     api_key = os.getenv("GEMINI_API_KEY")  # or OPENAI_API_KEY, swap as needed
 
     response = requests.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
         headers={"Content-Type": "application/json"},
         params={"key": api_key},
 
