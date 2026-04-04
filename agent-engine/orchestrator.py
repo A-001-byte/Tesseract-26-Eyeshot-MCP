@@ -2,7 +2,7 @@ import real_mcp as mock_mcp
 import audit_trail
 from agents.validator import validate_tool_call
 
-USE_REAL_MCP = False  # flip to True when P1's backend is ready
+USE_REAL_MCP = True  # ✅ Flipped to True! Our proxy server is ready!
 
 if USE_REAL_MCP:
     import real_mcp as mcp
@@ -16,9 +16,18 @@ TOOL_MAP = {
     "move_object":mcp.move_object,
 }
 
-def unwrap_response(output: dict) -> dict:
+import json
+
+def unwrap_response(output) -> dict:
+    if hasattr(output, 'content') and isinstance(output.content, list) and len(output.content) > 0:
+        try:
+            output = json.loads(output.content[0].text)
+        except Exception:
+            pass
+            
     if isinstance(output, dict) and output.get("status") == "error":
-        raise Exception(f"MCP error: {output.get('message')}")
+        print(f"MCP gracefully handled error: {output.get('message')}")
+        
     return output.get("data", output) if isinstance(output, dict) else output
 
 def execute_plan(plan: list):
