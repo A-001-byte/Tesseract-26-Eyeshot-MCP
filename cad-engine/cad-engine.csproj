@@ -4,10 +4,20 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>cad_engine</RootNamespace>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
-  <!-- No external dependencies added yet -->
+  <!-- Real devDept Eyeshot v2026 SDK DLLs -->
+  <ItemGroup>
+    <!-- Primary Eyeshot assembly — contains Eyeshot, Geometry, Translators, Entities -->
+    <Reference Include="devDept.Eyeshot.v2026">
+      <HintPath>lib\devDept.Eyeshot.v2026.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+
 </Project>
