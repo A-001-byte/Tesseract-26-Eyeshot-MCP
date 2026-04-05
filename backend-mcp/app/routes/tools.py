@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.models.request_models import ChatRequest, LoadModelRequest
 from app.models.tool_schema import TOOLS
-from app.services.cad_client import get_entity_count, list_entities, load_model, get_bom
+from app.services.cad_client import get_entity_count, list_entities, load_model
 from app.services.command_router import route_prompt
 from app.utils.logger import get_logger
 
@@ -92,38 +92,6 @@ async def tool_list_entities():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/tools/get_bom")
-async def tool_get_bom():
-    try:
-        return await get_bom()
-    except HTTPException:
-        raise
-    except httpx.HTTPStatusError as exc:
-        logger.error("get_bom upstream status error", exc_info=exc)
-        raise HTTPException(status_code=502, detail="Upstream error")
-    except httpx.TimeoutException as exc:
-        logger.error("get_bom timeout", exc_info=exc)
-        raise HTTPException(status_code=504, detail="Upstream timeout")
-    except httpx.RequestError as exc:
-        logger.error("get_bom upstream error", exc_info=exc)
-        raise HTTPException(status_code=502, detail="Upstream request failed")
-    except Exception as exc:
-        logger.error("get_bom unexpected error", exc_info=exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-@router.get("/bom")
-async def bom_alias():
-    """Stable alias for BOM data used by frontend clients."""
-    return await tool_get_bom()
-
-
-@router.get("/entities")
-async def entities_alias():
-    """Stable alias for entity list used by frontend clients."""
-    return await tool_list_entities()
-
-
 @router.post("/chat")
 async def chat(request: ChatRequest):
     request_id = str(uuid.uuid4())
@@ -132,16 +100,7 @@ async def chat(request: ChatRequest):
         preview = (request.prompt or "").strip().replace("\n", " ")[:80]
         logger.debug("Chat prompt preview request_id=%s preview=%s", request_id, preview)
     try:
-        response = await route_prompt(request.prompt)
-        
-        # Make sure these fields are passed through to the final API response
-        cad_data = response.get("result", {}).get("data", {})
-        if isinstance(cad_data, dict):
-            for k, v in cad_data.items():
-                if k not in response:
-                    response[k] = v
-                    
-        return response
+        return await route_prompt(request.prompt)
     except HTTPException:
         raise
     except ValueError as exc:
