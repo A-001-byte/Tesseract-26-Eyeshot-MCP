@@ -12,7 +12,7 @@ logging.getLogger("uvicorn").setLevel(logging.WARNING)
 
 # Basic MCP server skeleton
 mcp = FastMCP("CAD-Engine-MCP")
-CAD_API_BASE_URL = "http://localhost:5005"
+CAD_API_BASE_URL = "http://localhost:5000"
 
 def log(message: str):
     """
@@ -24,8 +24,7 @@ def log(message: str):
 async def check_backend_health():
     try:
         async with httpx.AsyncClient() as client:
-            # P2 added a lightweight endpoint /api/cad/entities/count which is perfect for a ping test!
-            res = await client.get(f"{CAD_API_BASE_URL}/api/cad/entities/count", timeout=3)
+            res = await client.get(f"{CAD_API_BASE_URL}/health", timeout=3)
             return res.status_code == 200
     except:
         return False
@@ -42,21 +41,19 @@ async def load_model(file_path: str) -> dict:
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                f"{CAD_API_BASE_URL}/api/cad/load",
-                json={"filePath": file_path}
+                f"{CAD_API_BASE_URL}/load_model",
+                json={"file": file_path}
             )
             response.raise_for_status()
             
             payload = response.json()
-            # P2 backend now returns its own { status, message, data } structure
-            # We enforce standard mapping to ensure the LLM gets consistent types
-            api_message = payload.get("message", f"Successfully loaded model from {file_path}")
+            api_message = f"Successfully loaded model from {file_path}"
             
             log("[MCP] Success: Model loaded successfully")
             return {
                 "status": "success",
                 "message": api_message,
-                "data": {}
+                "data": payload
             }
             
         except httpx.HTTPStatusError as e:
@@ -88,12 +85,11 @@ async def list_entities() -> dict:
     
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(f"{CAD_API_BASE_URL}/api/cad/entities/list")
+            response = await client.get(f"{CAD_API_BASE_URL}/list_entities")
             response.raise_for_status()
             
-            # P2 now returns nested data: { "status": "Success", "data": [ { "id": "...", "type": "..." } ] }
             payload = response.json()
-            raw_entities = payload.get("data", [])
+            raw_entities = payload if isinstance(payload, list) else payload.get("data", [])
             
             log("[MCP] Success: Entities retrieved successfully")
             return {
@@ -173,15 +169,50 @@ async def move_object(entity_id: str, translation: list) -> dict:
     """
     log("[MCP] Tool: move_object")
     log(f"[MCP] Input: {entity_id}, {translation}")
+    log("[MCP] Calling API: POST /move_object")
     
-    msg = "Feature 'move_object' is not yet implemented by the .NET CAD engine backend. Please inform the user."
-    log(f"[MCP] Error/Stub: {msg}")
-    
-    return {
-         "status": "error",
-         "message": msg,
-         "data": {}
-    }
+    x, y, z = 0.0, 0.0, 0.0
+    if isinstance(translation, list) and len(translation) >= 3:
+        x, y, z = translation[0], translation[1], translation[2]
+        
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                f"{CAD_API_BASE_URL}/move_object",
+                json={
+                    "object_id": entity_id,
+                    "x": x,
+                    "y": y,
+                    "z": z
+                }
+            )
+            response.raise_for_status()
+            
+            payload = response.json()
+            
+            log(f"[MCP] Success: Moved entity {entity_id}")
+            return {
+                "status": "success",
+                "message": f"Successfully moved entity {entity_id}",
+                "data": payload
+            }
+            
+        except httpx.HTTPStatusError as e:
+            msg = f"API returned non-200 status code: {e.response.status_code}"
+            log(f"[MCP] Error: {msg}")
+            return {"status": "error", "message": msg, "data": {}}
+        except httpx.RequestError as e:
+            msg = f"Network failure calling API (Connection Refused/Timeout)"
+            log(f"[MCP] Error: {msg}")
+            return {"status": "error", "message": msg, "data": {}}
+        except ValueError:
+            msg = "Invalid JSON response from API"
+            log(f"[MCP] Error: {msg}")
+            return {"status": "error", "message": msg, "data": {}}
+        except Exception as e:
+            msg = f"Unexpected error: {str(e)}"
+            log(f"[MCP] Error: {msg}")
+            return {"status": "error", "message": msg, "data": {}}
 
 
 if __name__ == "__main__":
