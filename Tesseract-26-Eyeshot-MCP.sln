@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cad-engine", "cad-engine\cad-engine.csproj", "{DCE97A26-F646-DF48-EC62-1A5E16630DCD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DCE97A26-F646-DF48-EC62-1A5E16630DCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCE97A26-F646-DF48-EC62-1A5E16630DCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCE97A26-F646-DF48-EC62-1A5E16630DCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCE97A26-F646-DF48-EC62-1A5E16630DCD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4FD2CC78-19BF-44EB-B926-608B977D4C89}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "eyeshot": {
+      "type": "http",
+      "url": "https://devdept.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_MCP_TOKEN"
+      }
+    }
+  }
+}
